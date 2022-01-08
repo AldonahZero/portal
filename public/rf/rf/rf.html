@@ -1,0 +1,278 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <title>轨迹回放</title>
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css"/>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.11/esri/themes/light/main.css" />
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.15&key=b3711b3d91abf28ac9e9403ffc5299b5"></script>
+    <script src="coordtransform.js"></script>
+    <style>
+        html, body, #container {
+            height: 100%;
+            width: 100%;
+        }
+
+        .input-card .btn{
+            margin-right: 1.2rem;
+            width: 9rem;
+        }
+
+        .input-card .btn:last-child{
+            margin-right: 0;
+        }
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<div class="input-card">
+    <h4>绕飞路径规划</h4>
+    <div id="LongLat">
+        输入中心点高德经度: <input type="text" class="long" value="116.400274"/>
+        输入中心点高德纬度: <input type="text" class="lat" value="39.905812"/>
+    </div>
+    <div id="calculator">
+        旋转角度: <input type="text" class="angle" value="45"/>
+        半径:<input type="text" class="radius" value="100"/>
+    </div>
+    <div id="result">
+        <input type="button" value="开始路径规划" onclick="ShowPath()" />
+    </div>    
+</div>
+
+<script>
+var map = map = new AMap.Map('container', {
+    resizeEnable: true,
+    center: [116.400274, 39.905812],
+    viewMode:'3D',
+    zooms: [4,18], //设置地图级别范围
+    zoom: 18
+});
+var marker = new AMap.Marker({
+    position: [116.400274, 39.905812],
+    icon: "../car1.jpg",
+    offset: new AMap.Pixel(-26, -13),
+    autoRotation: true,
+    angle:0,
+});
+map.add(marker);
+</script>
+
+<script>
+    var package_path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
+    //var package_path = window.location.pathname.replace(/\/[^\/]*$/,"");
+    var dojoConfig = {
+        packages: [{
+            name: "modules",
+            location: package_path + '/modules'
+        }]
+    };
+</script>
+<script src="https://js.arcgis.com/4.12/"></script>
+<script type="text/javascript" >
+    var LongLat = document.querySelector('#LongLat');    
+    var long = LongLat.querySelector('.long');
+    var lat = LongLat.querySelector('.lat');
+</script>
+
+<script>
+//将高德gcj02坐标系转换为wgs84坐标系
+function gcj02towgs84(){
+    var gcj02towgs84 = coordtransform.gcj02towgs84(long.value,lat.value);
+    return gcj02towgs84;
+    }
+</script>
+
+<script>
+    var map,measureTool;
+    var md = Math.round(long.value/3)*3;
+    require([
+        "modules/LatLong2GaussKruger",//调用modules文件夹的LatLong2GaussKruger.js文件
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/config"
+    ], function (LatLong2GaussKruger, Map, MapView, esriConfig) {
+        convertTool = new LatLong2GaussKruger(2,md,0,500000,0);
+    });
+     /*****将wgs84坐标转换成高斯-克吕格平面坐标*****/   
+    function LongLat2GK (){
+        var arr_gcj02towgs84 = new Array();
+        arr_gcj02towgs84 = gcj02towgs84();
+        var x =  arr_gcj02towgs84[0];
+        var y =  arr_gcj02towgs84[1];
+        let coord = convertTool.JWgetGK(x,y);
+        return coord;
+    }
+</script>
+
+<script type="text/javascript" >
+    var PI = 3.1415926535897932384626;
+    var calculator = document.querySelector('#calculator');    
+    var angle = calculator.querySelector('.angle');
+    var radius = calculator.querySelector('.radius');
+/*用中心点平面坐标和半径、旋转角来计算无人机航点的平面坐标*/
+    function calculate (){
+    var arr_coord = new Array();
+    arr_coord = LongLat2GK();
+    var a = angle.value;
+    var r = radius.value;
+    var x = arr_coord.x;
+    var y = arr_coord.y;
+    var arr_x = new Array();
+    var arr_y = new Array();
+    //console.log(a);
+    for (let i = 0; i < 360 / a; i++) {
+		var m = a*i;
+		var t_x = +x + r * Math.cos(m*PI / 180);
+        var t_y = +y + r * Math.sin(m*PI / 180);
+        arr_x.push(t_x);
+        arr_y.push(t_y);
+    }
+    //console.log(arr_x);
+        return{
+            g:arr_x,
+            h:arr_y
+        }
+}
+/****将计算得到的无人机航点的平面坐标转换成wgs84坐标******/
+   var map,measureTool;
+   var md = Math.round(long.value/3)*3;
+    require([
+        "modules/LatLong2GaussKruger",//调用modules文件夹的LatLong2GaussKruger.js文件
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/config"
+    ], function (LatLong2GaussKruger, Map, MapView, esriConfig) {
+        convertTool = new LatLong2GaussKruger(2,md,0,500000,0);
+    });
+/*****将高斯-克吕格平面坐标转换成wgs84坐标*****/
+    function GK2LongLat (){
+        var a = angle.value;
+        //var r = radius.value;
+        var GK_X = new Array();
+        var GK_Y = new Array();
+        GK_X = calculate().g;
+        GK_Y = calculate().h;
+        var X = GK_X;
+        var Y = GK_Y; 
+        var arr_Long = new Array();
+        var arr_Lat = new Array();
+        for (let i = 0; i < 360 / a; i++) {
+        let Wgs84LongLat = convertTool.GKgetJW(X[i],Y[i]);
+        arr_Long.push(Wgs84LongLat.x);
+        arr_Lat.push(Wgs84LongLat.y);
+        }
+        return {
+        c:arr_Long , 
+        d:arr_Lat
+        }
+    }
+
+/*****将wgs84坐标转换成高德gcj02坐标*****/
+
+function ShowPath() {
+        var a = angle.value;
+        let Wgs84_Long = new Array();
+        let Wgs84_Lat = new Array();
+        Wgs84_Long = GK2LongLat ().c;
+        Wgs84_Lat =  GK2LongLat ().d;
+        var plane_LongLat = new Array();
+        //var  planeLongLat = new Array();
+        for (let i = 0;i < 360 / a; i++) {
+          //var plane_Long = new Array();
+          //var Plane_Lat = new Array();
+          plane_LongLat[i] = new Array();
+          wgs84togcj02 = coordtransform.wgs84togcj02( Wgs84_Long[i],Wgs84_Lat[i]);
+         console.log(wgs84togcj02);
+         plane_LongLat[i][0] = wgs84togcj02[0];
+         plane_LongLat[i][1] = wgs84togcj02[1];
+         //console.log(plane_LongLat[i][0]);
+        // plane_Long.push(wgs84togcj02[0]);
+         //Plane_Lat.push(wgs84togcj02[1]);
+         //console.log(plane_Long);
+         //console.log( plane_Long[i]+','+Plane_Lat[i]);
+         //confirm("plane_Long[i]")
+           // //console.log(Plane_Long);
+         ////planeLongLat.push(wgs84togcj02[0],wgs84togcj02[1]);
+         //alert( plane_Long[i]+","+Plane_Lat[i]);
+    }
+    var path = plane_LongLat;
+    //console.log(path);
+    var polyline = new AMap.Polyline({
+      path: path,
+      isOutline: true,
+      outlineColor: '#ffeeff',
+      borderWeight: 3,
+      strokeColor: "#3366FF",
+      strokeOpacity: 1,
+      strokeWeight: 6,     
+      strokeStyle: "solid",
+      strokeDasharray: [10, 5],
+      lineJoin: 'round',
+      lineCap: 'round',
+      zIndex: 50,
+    })
+    map.add(polyline);
+   var marker = plane_LongLat;
+    marker = new AMap.Marker({
+    map: map,
+    path: path,
+    position: plane_LongLat[0],
+    icon: "../airplane.jpg",
+    offset: new AMap.Pixel(-26, -13),
+    autoRotation: true,
+    angle:0,
+});
+    var passedPolyline = new AMap.Polyline({
+        map: map,
+        strokeColor: "#AF5",  //线颜色
+        strokeWeight: 6,      //线宽
+    });
+    marker.on('moving', function (e) {
+        passedPolyline.setPath(e.passedPath);
+    });
+    marker.moveAlong(path, 200);
+    map.setFitView();
+    }
+ 
+/*****将绕飞路径规划出来并且显示航点*****/
+/*function ShowPath(){
+    var path_Long = new Array();
+    var path_Lat = new Array();
+    var a = angle.value;
+    path_Long = wgs84togcj02 ().e;
+    console.log(path_Long);
+    path_Lat =  GK2LongLat ().f;
+    console.log(path_Lat);
+    for(let i = 0;i < 360 / a; i++){
+    //let n = wgs84togcj02 ().a[i];
+    //let m = wgs84togcj02 ().b[i];
+    var path = [[path_Long[i],path_Lat[i]]];
+    //console.log(path);
+    var arr_path = new Array();
+    arr_path.push(path);
+    //console.log( arr_path);
+}
+    var path = wgs84togcj02();
+    console.log(path);
+    var polyline = new AMap.Polyline({
+      path: path,
+      isOutline: true,
+      outlineColor: '#ffeeff',
+      borderWeight: 3,
+      strokeColor: "#3366FF",
+      strokeOpacity: 1,
+      strokeWeight: 6,     
+      strokeStyle: "solid",
+      strokeDasharray: [10, 5],
+      lineJoin: 'round',
+      lineCap: 'round',
+      zIndex: 50,
+    })
+    map.add(polyline);
+    }*/
+</script>
+</body>
+</html>
