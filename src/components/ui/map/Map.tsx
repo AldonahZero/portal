@@ -63,7 +63,7 @@ class ThisApp extends React.Component {
             default:
                 text = '';
         }
-        console.log(text)
+        console.log(text);
         this.setState({
             what: text,
         });
@@ -132,28 +132,28 @@ class ThisApp extends React.Component {
                         this.drawMarker();
                     }}
                 >
-                    绘制坐标点
+                    添加兴趣点
                 </Button>
                 <Button
                     onClick={() => {
                         this.drawRectangle();
                     }}
                 >
-                    绘制多边形（矩形）
+                    添加区域（矩形）
                 </Button>
                 <Button
                     onClick={() => {
                         this.drawCircle();
                     }}
                 >
-                    绘制圆形
+                    设置飞行半径
                 </Button>
                 <Button
                     onClick={() => {
                         this.drawPolygon();
                     }}
                 >
-                    绘制多边形
+                    添加区域
                 </Button>
                 <Button
                     onClick={() => {
@@ -164,15 +164,18 @@ class ThisApp extends React.Component {
                 </Button>
                 <Button
                     onClick={() => {
-                        window.open('http://localhost:3006/Amap_PathPlanning/test/index.lbs.html', '_blank');
+                        window.open(
+                            'http://localhost:3006/Amap_PathPlanning/test/index.lbs.html',
+                            '_blank'
+                        );
                     }}
                 >
                     牛耕法全屏展示
                 </Button>
                 <Button
-                                onClick={() => {
-                                    window.open('http://localhost:3006/rf/rf/rf.html', '_blank');
-                                }}
+                    onClick={() => {
+                        window.open('http://localhost:3006/rf/rf/rf.html', '_blank');
+                    }}
                 >
                     绕飞法全屏展示
                 </Button>

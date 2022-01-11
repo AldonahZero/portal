@@ -1,12 +1,12 @@
 /**
- * 
+ *
  */
 import React from 'react';
 import { Row, Col, Card, Timeline } from 'antd';
 import BreadcrumbCustom from '../widget/BreadcrumbCustom';
 import EchartsViews from './EchartsViews';
 import EchartsProjects from './EchartsProjects';
-import EchartsDatas from './EchartsDatas'
+import EchartsDatas from './EchartsDatas';
 import b1 from '../../style/imgs/b1.jpg';
 import b2 from '../../style/imgs/b2.jpg';
 import {
@@ -22,8 +22,8 @@ class Dashboard extends React.Component {
         return (
             <div className="gutter-example button-demo">
                 <BreadcrumbCustom />
-                <Row gutter={10}>
-                    <Col className="gutter-row" md={4}>
+                <Row gutter={16}>
+                    <Col span={12}>
                         <div className="gutter-box">
                             <Card bordered={false}>
                                 <div className="clear y-center">
@@ -50,8 +50,6 @@ class Dashboard extends React.Component {
                                 </div>
                             </Card>
                         </div>
-                    </Col>
-                    <Col className="gutter-row" md={4}>
                         <div className="gutter-box">
                             <Card bordered={false}>
                                 <div className="clear y-center">
@@ -79,16 +77,8 @@ class Dashboard extends React.Component {
                             </Card>
                         </div>
                     </Col>
-                    <Col className="gutter-row" md={16}>
-                        <div className="gutter-box">
-                            <Card bordered={false} className={'no-padding'}>
-                                <EchartsProjects />
-                            </Card>
-                        </div>
-                    </Col>
-                </Row>
-                <Row gutter={10}>
-                    <Col className="gutter-row" md={8}>
+
+                    <Col span={12}>
                         <div className="gutter-box">
                             <Card bordered={false}>
                                 <div className="pb-m">
@@ -114,6 +104,8 @@ class Dashboard extends React.Component {
                                 </Timeline>
                             </Card>
                         </div>
+                    </Col>
+                    <Col span={12}>
                         <div className="gutter-box">
                             <Card bordered={false}>
                                 <div className="pb-m">
@@ -172,42 +164,15 @@ class Dashboard extends React.Component {
                                         </span>
                                         <div className="clear">
                                             <span className="block">图像拼接机「001」</span>
-                                            <span className="text-muted">
-                                            拼接图片任务进行中!
-                                            </span>
+                                            <span className="text-muted">拼接图片任务进行中!</span>
                                         </div>
                                     </li>
                                 </ul>
                             </Card>
                         </div>
-                        <div className="gutter-box">
-                            <Card bordered={false}>
-                                <div className="pb-m">
-                                    <h3>访问量统计</h3>
-                                    <small>最近7天用户访问量</small>
-                                </div>
-                                <span className="card-tool">
-                                    <SyncOutlined type="sync" />
-                                </span>
-                                <EchartsViews />
-                            </Card>
-                        </div>
                     </Col>
-                    <Col className="gutter-row" md={16}>
-                    <div className="gutter-box">
-                            <Card bordered={false}>
-                                <div className="pb-m">
-                                    <h3>数据可视化</h3>
-                                    <small>数据可视化展示</small>
-                                </div>
-                                <span className="card-tool">
-                                    <SyncOutlined type="sync" />
-                                </span>
-                                <EchartsDatas/>
-                            </Card>
-                        </div>
-                        
-                    </Col>
+
+                    <Col span={12} />
                 </Row>
             </div>
         );
